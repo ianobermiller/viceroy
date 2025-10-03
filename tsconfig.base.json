@@ -32,13 +32,8 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
 
-        // Path Mapping
-        "baseUrl": ".",
-        "paths": { "@/*": ["src/*"] },
-
         // Additional Checks
         "forceConsistentCasingInFileNames": true,
         "verbatimModuleSyntax": true
     }
 }
-

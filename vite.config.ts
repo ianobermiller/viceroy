@@ -35,5 +35,4 @@ export default defineConfig({
         },
     },
     plugins: [react(), tailwindcss(), copyManifest()],
-    resolve: { alias: { '@': resolve(__dirname, 'src') } },
 });
