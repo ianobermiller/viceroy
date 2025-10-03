@@ -13,6 +13,12 @@ export interface Term {
     text: string;
 }
 
+interface AvailableTermsProps {
+    onDropToAvailable: (termIndex: number) => void;
+    terms: Term[];
+    usedTermIndices: number[];
+}
+
 interface DraggableItemProps {
     termIndex: number;
     text: string;
@@ -23,7 +29,6 @@ interface DropZoneProps {
     definitionText: string;
     matchedTerm: null | Term;
     onDrop: (definitionIndex: number, termIndex: number) => void;
-    onRemoveTerm: (definitionIndex: number) => void;
 }
 
 interface Props {
@@ -82,25 +87,29 @@ export function MatchingExercise({ definitions, onUpdateInput, terms }: Props) {
         }
     };
 
+    const handleDropToAvailable = (termIndex: number) => {
+        // Find which definition this term was matched to and remove it
+        for (const [defIdxStr, matchedTermIndex] of Object.entries(definitionToTermMapping)) {
+            if (matchedTermIndex === termIndex) {
+                const defIdx = parseInt(defIdxStr, 10);
+                handleRemoveTerm(defIdx);
+                break;
+            }
+        }
+    };
+
     return (
         <div className='space-y-6'>
             {/* Available Terms */}
-            <section>
-                <h4 className='mb-3 font-medium text-gray-700'>Available Terms</h4>
-                <div className='flex flex-wrap gap-2'>
-                    {terms
-                        .filter((term) => !Object.values(definitionToTermMapping).includes(term.index))
-                        .map((term) => (
-                            <DraggableItem key={term.index} termIndex={term.index} text={term.text} />
-                        ))}
-                    {terms.filter((term) => !Object.values(definitionToTermMapping).includes(term.index)).length ===
-                        0 && <p className='text-gray-500 italic'>All terms have been used</p>}
-                </div>
-            </section>
+            <AvailableTerms
+                onDropToAvailable={handleDropToAvailable}
+                terms={terms}
+                usedTermIndices={Object.values(definitionToTermMapping).filter((idx): idx is number => idx !== null)}
+            />
 
             {/* Definitions with Drop Zones */}
             <section>
-                <h4 className='mb-3 font-medium text-gray-700'>Definitions</h4>
+                <h4 className='mb-3 text-sm text-gray-700'>Definitions</h4>
                 <div className='space-y-3'>
                     {definitions.map((definition) => {
                         const matchedTermIndex = definitionToTermMapping[definition.index];
@@ -116,13 +125,57 @@ export function MatchingExercise({ definitions, onUpdateInput, terms }: Props) {
                                 key={definition.index}
                                 matchedTerm={matchedTerm}
                                 onDrop={handleDrop}
-                                onRemoveTerm={handleRemoveTerm}
                             />
                         );
                     })}
                 </div>
             </section>
         </div>
+    );
+}
+
+function AvailableTerms({ onDropToAvailable, terms, usedTermIndices }: AvailableTermsProps) {
+    const [isDragOver, setIsDragOver] = useState(false);
+    const availableTerms = terms.filter((term) => !usedTermIndices.includes(term.index));
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(true);
+    };
+
+    const handleDragLeave = () => {
+        setIsDragOver(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(false);
+
+        const termIndex = parseInt(e.dataTransfer.getData('text/plain'));
+        if (!isNaN(termIndex) && usedTermIndices.includes(termIndex)) {
+            onDropToAvailable(termIndex);
+        }
+    };
+
+    return (
+        <section
+            className={isDragOver ? 'rounded-lg outline-2 outline-offset-4 outline-gray-400 outline-dashed' : ''}
+            onDragLeave={handleDragLeave}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+        >
+            <h4 className='mb-3 text-sm text-gray-700'>Available Terms</h4>
+            <div className='flex flex-wrap gap-2'>
+                {availableTerms.map((term) => (
+                    <DraggableItem key={term.index} termIndex={term.index} text={term.text} />
+                ))}
+                {availableTerms.length === 0 && (
+                    <p className='text-gray-500 italic'>
+                        {isDragOver ? 'Drop here to return term' : 'All terms have been used'}
+                    </p>
+                )}
+            </div>
+        </section>
     );
 }
 
@@ -140,18 +193,18 @@ function DraggableItem({ termIndex, text }: DraggableItemProps) {
 
     return (
         <div
-            className='cursor-grab rounded bg-gradient-to-br from-indigo-500 to-purple-600 text-center text-white shadow-sm transition-all duration-200 select-none hover:scale-105 hover:shadow-md active:scale-95 active:cursor-grabbing'
+            className='cursor-grab rounded bg-gradient-to-br from-slate-400 to-slate-500 text-center text-white shadow-sm transition-all duration-200 select-none hover:scale-105 hover:shadow-md active:scale-95 active:cursor-grabbing'
             draggable
             onDragEnd={handleDragEnd}
             onDragStart={handleDragStart}
-            style={{ lineHeight: TERM_HEIGHT, width: TERM_WIDTH }}
+            style={{ lineHeight: `${TERM_HEIGHT}px`, width: TERM_WIDTH }}
         >
             {text}
         </div>
     );
 }
 
-function DropZone({ definitionIndex, definitionText, matchedTerm, onDrop, onRemoveTerm }: DropZoneProps) {
+function DropZone({ definitionIndex, definitionText, matchedTerm, onDrop }: DropZoneProps) {
     const [isDragOver, setIsDragOver] = useState(false);
 
     const handleDragOver = (e: React.DragEvent) => {
@@ -173,18 +226,10 @@ function DropZone({ definitionIndex, definitionText, matchedTerm, onDrop, onRemo
         }
     };
 
-    const handleRemoveClick = () => {
-        onRemoveTerm(definitionIndex);
-    };
-
     return (
         <div
-            className={`flex items-center gap-4 rounded-lg border-2 border-dashed p-4 transition-all duration-200 ${
-                isDragOver
-                    ? 'border-sky-500 bg-sky-100'
-                    : matchedTerm
-                      ? 'border-green-300 bg-green-50'
-                      : 'border-gray-300 bg-gray-50 hover:border-sky-300 hover:bg-sky-50'
+            className={`flex items-center gap-4 rounded-lg p-4 transition-all duration-200 ${
+                isDragOver ? 'bg-gray-100' : ''
             }`}
             onDragLeave={handleDragLeave}
             onDragOver={handleDragOver}
@@ -193,23 +238,7 @@ function DropZone({ definitionIndex, definitionText, matchedTerm, onDrop, onRemo
             {/* Term on the left with fixed width */}
             <div className='flex-shrink-0' style={{ width: TERM_WIDTH }}>
                 {matchedTerm ? (
-                    <div className='flex items-center gap-2'>
-                        <DraggableItem termIndex={matchedTerm.index} text={matchedTerm.text} />
-                        <button
-                            className='text-gray-400 transition-colors hover:text-red-500'
-                            onClick={handleRemoveClick}
-                            title='Remove match'
-                        >
-                            <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                <path
-                                    d='M6 18L18 6M6 6l12 12'
-                                    strokeLinecap='round'
-                                    strokeLinejoin='round'
-                                    strokeWidth={2}
-                                />
-                            </svg>
-                        </button>
-                    </div>
+                    <DraggableItem termIndex={matchedTerm.index} text={matchedTerm.text} />
                 ) : (
                     <div
                         className='rounded border-2 border-dashed border-gray-300 text-gray-400'
