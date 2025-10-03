@@ -22,3 +22,18 @@
 .small-logo {
     height: 42px !important;
 }
+
+.ui-layout-resizer,
+.ui-layout-south,
+.ui-layout-center {
+    display: none !important;
+}
+
+table .problem_nav_container {
+    padding: 8px 12px;
+    font-size: 16px;
+
+    &:hover {
+        background-color: #f0f0f0;
+    }
+}

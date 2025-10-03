@@ -4,11 +4,6 @@ import type { Definition, Term } from './MatchingExercise';
 import { MatchingExercise } from './MatchingExercise';
 import './content.css';
 
-const indicator = document.createElement('div');
-indicator.textContent = '🦋 Viceroy Active';
-indicator.className =
-    'fixed top-3 right-3 z-[10000] transition-all duration-300 shadow-lg rounded-md bg-indigo-600 px-3 py-2 text-white font-semibold font-sans hover:transform hover:-translate-y-0.5 hover:shadow-xl hover:bg-indigo-700 animate-in fade-in slide-in-from-top-2 duration-500';
-
 // Add the indicator when the page loads
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
@@ -17,9 +12,10 @@ if (document.readyState === 'loading') {
 }
 
 function init() {
-    document.body.appendChild(indicator);
     initializeDragDrop();
     observePageChanges();
+
+    initializeGradingPage();
 }
 
 function initializeDragDrop() {
@@ -27,6 +23,22 @@ function initializeDragDrop() {
     const matchingTables = document.querySelectorAll<HTMLTableElement>('#problem_form .items > table');
 
     matchingTables.forEach(setupMatchingExercise);
+}
+
+function initializeGradingPage() {
+    const theProblemsIframe = document.querySelector<HTMLIFrameElement>('iframe#the_problems');
+    const thePresentationIframe = document.querySelector<HTMLIFrameElement>('iframe#the_presentation');
+    if (thePresentationIframe && theProblemsIframe) {
+        console.log({ thePresentationIframe, theProblemsIframe });
+        // create a new root level div
+        const rootDiv = document.createElement('div');
+        rootDiv.className = 'viceroy w-screen h-screen bg-white flex pt-[38px]';
+        theProblemsIframe.className = 'flex-1';
+        thePresentationIframe.className = 'flex-1';
+        rootDiv.appendChild(theProblemsIframe);
+        rootDiv.appendChild(thePresentationIframe);
+        document.body.appendChild(rootDiv);
+    }
 }
 
 // Monitor for dynamically added content
