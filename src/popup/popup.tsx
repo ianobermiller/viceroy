@@ -1,5 +1,5 @@
 import ReactDOM from 'react-dom/client';
-import App from '@/components/App';
+import App from '@/popup/App';
 import './popup.css';
 
 const el = document.getElementById('root');

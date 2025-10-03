@@ -1,7 +1,6 @@
-import type React from 'react';
 import { useState } from 'react';
 
-const App: React.FC = () => {
+function App() {
     const [isActive, setIsActive] = useState(true);
 
     return (
@@ -62,6 +61,6 @@ const App: React.FC = () => {
             </div>
         </div>
     );
-};
+}
 
 export default App;
