@@ -193,7 +193,7 @@ function DraggableItem({ termIndex, text }: DraggableItemProps) {
 
     return (
         <div
-            className='cursor-grab rounded bg-gradient-to-br from-slate-400 to-slate-500 text-center text-white shadow-sm transition-all duration-200 select-none hover:scale-105 hover:shadow-md active:scale-95 active:cursor-grabbing'
+            className='cursor-grab rounded bg-gradient-to-br from-blue-100 to-purple-200 text-center text-black shadow-sm transition-all duration-200 select-none hover:scale-105 hover:shadow-md active:scale-95 active:cursor-grabbing'
             draggable
             onDragEnd={handleDragEnd}
             onDragStart={handleDragStart}
