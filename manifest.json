@@ -11,6 +11,5 @@
             "css": ["content.css"],
             "all_frames": true
         }
-    ],
-    "action": { "default_popup": "popup.html", "default_title": "Viceroy" }
+    ]
 }

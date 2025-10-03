@@ -17,7 +17,6 @@ function copyManifest(): Plugin {
         name: 'copy-manifest',
         async writeBundle() {
             await copyFile(resolve(__dirname, 'manifest.json'), resolve(__dirname, 'dist/manifest.json'));
-            await copyFile(resolve(__dirname, 'src/popup/popup.html'), resolve(__dirname, 'dist/popup.html'));
         },
     } satisfies Plugin;
 }
@@ -27,11 +26,14 @@ export default defineConfig({
         emptyOutDir: true,
         outDir: 'dist',
         rollupOptions: {
-            input: {
-                content: resolve(__dirname, 'src/content/content.ts'),
-                popup: resolve(__dirname, 'src/popup/popup.html'),
+            external: [],
+            input: resolve(__dirname, 'src/content.ts'),
+            output: {
+                assetFileNames: '[name].[ext]',
+                chunkFileNames: '[name].js',
+                entryFileNames: 'content.js',
+                inlineDynamicImports: true,
             },
-            output: { assetFileNames: '[name].[ext]', chunkFileNames: '[name].js', entryFileNames: '[name].js' },
         },
     },
     plugins: [react(), tailwindcss(), copyManifest()],

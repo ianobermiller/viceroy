@@ -1,0 +1,24 @@
+@layer theme {
+    @import 'tailwindcss/theme.css';
+}
+
+@layer base {
+    .viceroy {
+        @import 'tailwindcss/preflight.css';
+    }
+}
+
+@layer components;
+
+@layer utilities {
+    @import 'tailwindcss/utilities.css';
+}
+
+/** Smaller top bar */
+.navbar li a,
+.navbar-brand {
+    padding: 4px !important;
+}
+.small-logo {
+    height: 42px !important;
+}
