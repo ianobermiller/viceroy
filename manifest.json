@@ -4,6 +4,13 @@
     "version": "1.0.0",
     "description": "A Chrome extension for monarch-app.aop.com",
     "permissions": ["activeTab"],
-    "content_scripts": [{ "matches": ["https://monarch-app.aop.com/*"], "js": ["content.js"], "css": ["content.css"] }],
+    "content_scripts": [
+        {
+            "matches": ["https://monarch-app.aop.com/*"],
+            "js": ["content.js"],
+            "css": ["content.css"],
+            "all_frames": true
+        }
+    ],
     "action": { "default_popup": "popup.html", "default_title": "Viceroy" }
 }
