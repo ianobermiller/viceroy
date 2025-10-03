@@ -1,0 +1,10 @@
+{
+    "manifest_version": 3,
+    "name": "Viceroy",
+    "version": "1.0.0",
+    "description": "A Chrome extension for monarch-app.aop.com",
+    "permissions": ["activeTab"],
+    "content_scripts": [{ "matches": ["https://monarch-app.aop.com/*"], "js": ["dist/content.js"] }],
+    "action": { "default_popup": "dist/popup.html", "default_title": "Viceroy" },
+    "icons": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
+}
