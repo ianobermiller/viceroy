@@ -6,7 +6,8 @@
     "scripts": {
         "dev": "vite build --watch",
         "ts": "tsc --project src/tsconfig.json && tsc --project tsconfig.json",
-        "build": "vite build",
+        "build": "vite build && npm run zip",
+        "zip": "cd dist && zip -r ../viceroy.zip . && cd ..",
         "format": "prettier --write .",
         "lint": "eslint ."
     },
