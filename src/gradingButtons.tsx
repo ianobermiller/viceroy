@@ -1,3 +1,5 @@
+import { createRoot } from 'react-dom/client';
+
 export function gradingButtons() {
     // Look for the subjective score div
     const subjectiveScoreDiv = document.querySelector<HTMLDivElement>('#subjective_score');
@@ -14,29 +16,31 @@ export function gradingButtons() {
 
     if (!pointsReceivedInput || !pointsPossibleInput || !gradeButton) return;
 
-    // Create the auto-grade button
-    const autoGradeButton = document.createElement('button');
-    autoGradeButton.textContent = 'Correct (1/1)';
-    autoGradeButton.className =
-        // 'viceroy block px-4 py-3 bg-green-500 hover:bg-green-600 text-white border-none rounded cursor-pointer text-lg!';
-        '!block btn btn-success !mb-4';
-
-    // Add click handler
-    autoGradeButton.addEventListener('click', (e) => {
-        e.preventDefault();
-
-        // Fill in the scores
-        pointsReceivedInput.value = '1';
-        pointsPossibleInput.value = '1';
-
-        // Trigger input events to ensure any validation runs
+    // Callback to handle grade button clicks
+    const onGradeClick = (points: number) => {
+        pointsReceivedInput.value = points.toString();
         pointsReceivedInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+        pointsPossibleInput.value = points.toString();
         pointsPossibleInput.dispatchEvent(new Event('input', { bubbles: true }));
 
-        // Click the grade button
         gradeButton.click();
-    });
+    };
 
-    // Insert the button after the grade button
-    gradeButton.closest('.monarch-notice')?.insertAdjacentElement('afterbegin', autoGradeButton);
+    // Create React container and render component
+    const reactContainer = document.createElement('div');
+    reactContainer.className = 'viceroy';
+    const noticeElement = gradeButton.closest('.monarch-notice');
+    noticeElement?.insertAdjacentElement('afterbegin', reactContainer);
+
+    const root = createRoot(reactContainer);
+    root.render(
+        <div className='mb-4 flex gap-2'>
+            {[1, 10].map((points) => (
+                <button className='btn btn-success' key={points} onClick={() => onGradeClick(points)} type='button'>
+                    Correct ({points}/{points})
+                </button>
+            ))}
+        </div>,
+    );
 }
