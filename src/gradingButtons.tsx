@@ -17,14 +17,23 @@ export function gradingButtons() {
     if (!pointsReceivedInput || !pointsPossibleInput || !gradeButton) return;
 
     // Callback to handle grade button clicks
-    const onGradeClick = (points: number) => {
-        pointsReceivedInput.value = points.toString();
-        pointsReceivedInput.dispatchEvent(new Event('input', { bubbles: true }));
+    const onGradeClick = async (points: number) => {
+        await fetch(window.location.href.replace('/problem/', '/subjective_grade/') + `/${points}/${points}`, {
+            method: 'POST',
+        });
 
-        pointsPossibleInput.value = points.toString();
-        pointsPossibleInput.dispatchEvent(new Event('input', { bubbles: true }));
+        // pointsReceivedInput.value = points.toString();
+        // pointsReceivedInput.dispatchEvent(new Event('input', { bubbles: true }));
 
-        gradeButton.click();
+        // pointsPossibleInput.value = points.toString();
+        // pointsPossibleInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+        // gradeButton.click();
+
+        // Update the URL to increment the number at the end, e.g whatever/2 to whatever/3
+        const url = new URL(window.location.href);
+        url.pathname = url.pathname.replace(/\/(\d+)$/, (_, p1) => `/${Number(p1) + 1}`);
+        window.location.href = url.toString();
     };
 
     // Create React container and render component
