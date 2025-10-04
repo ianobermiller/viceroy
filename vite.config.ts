@@ -27,13 +27,11 @@ export default defineConfig({
         outDir: 'dist',
         rollupOptions: {
             external: [],
-            input: resolve(__dirname, 'src/content.ts'),
-            output: {
-                assetFileNames: '[name].[ext]',
-                chunkFileNames: '[name].js',
-                entryFileNames: 'content.js',
-                inlineDynamicImports: true,
+            input: {
+                background: resolve(__dirname, 'src/background.ts'),
+                content: resolve(__dirname, 'src/content.ts'),
             },
+            output: { assetFileNames: '[name].[ext]', chunkFileNames: '[name].js', entryFileNames: '[name].js' },
         },
     },
     plugins: [react(), tailwindcss(), copyManifest()],

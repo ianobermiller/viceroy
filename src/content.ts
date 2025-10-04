@@ -14,4 +14,14 @@ function init() {
     matchingLesson();
     gradingPage();
     gradingButtons();
+
+    alertAsEvent();
+}
+
+// Inject a script into the page that will override window.alert to bubble up as an event instead that can be listened
+// to by the content script.
+function alertAsEvent() {
+    window.addEventListener('alert', (event) => {
+        console.log('got an alert in content script', event);
+    });
 }
