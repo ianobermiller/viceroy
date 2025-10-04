@@ -11,10 +11,11 @@ if (document.readyState === 'loading') {
 }
 
 function init() {
+    chrome.runtime.sendMessage({ type: 'init' });
+
     matchingLesson();
     gradingPage();
     gradingButtons();
-
     alertAsEvent();
 }
 
