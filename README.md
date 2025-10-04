@@ -92,6 +92,8 @@ src/
 - Icons are placeholder - add actual icon files to the `icons/` directory
 - The content script adds a visual indicator and logs to the console
 - The popup provides a clean UI for managing extension features
+- [Insect icons](https://www.flaticon.com/free-icons/insect) created by
+  Freepik - Flaticon
 
 ## License
 
