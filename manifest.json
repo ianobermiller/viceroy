@@ -3,7 +3,7 @@
     "name": "Viceroy",
     "version": "1.0.0",
     "description": "A Chrome extension for monarch-app.aop.com",
-    "permissions": ["activeTab", "scripting"],
+    "permissions": ["scripting"],
     "host_permissions": ["https://monarch-app.aop.com/*"],
     "background": { "service_worker": "background.js" },
     "content_scripts": [
