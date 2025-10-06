@@ -38,7 +38,7 @@ interface Props {
 }
 
 const TERM_WIDTH = 200;
-const TERM_HEIGHT = 32;
+const TERM_HEIGHT = 28;
 
 export function MatchingExercise({ definitions, onUpdateInput, terms }: Props) {
     // State is just an object mapping definition index to term index
@@ -110,25 +110,21 @@ export function MatchingExercise({ definitions, onUpdateInput, terms }: Props) {
             {/* Definitions with Drop Zones */}
             <section>
                 <h4 className='mb-3 text-sm text-gray-700'>Definitions</h4>
-                <div className='space-y-3'>
-                    {definitions.map((definition) => {
-                        const matchedTermIndex = definitionToTermMapping[definition.index];
-                        const matchedTerm =
-                            matchedTermIndex !== undefined
-                                ? terms.find((t) => t.index === matchedTermIndex) || null
-                                : null;
+                {definitions.map((definition) => {
+                    const matchedTermIndex = definitionToTermMapping[definition.index];
+                    const matchedTerm =
+                        matchedTermIndex !== undefined ? terms.find((t) => t.index === matchedTermIndex) || null : null;
 
-                        return (
-                            <DropZone
-                                definitionIndex={definition.index}
-                                definitionText={definition.text}
-                                key={definition.index}
-                                matchedTerm={matchedTerm}
-                                onDrop={handleDrop}
-                            />
-                        );
-                    })}
-                </div>
+                    return (
+                        <DropZone
+                            definitionIndex={definition.index}
+                            definitionText={definition.text}
+                            key={definition.index}
+                            matchedTerm={matchedTerm}
+                            onDrop={handleDrop}
+                        />
+                    );
+                })}
             </section>
         </div>
     );
@@ -136,7 +132,9 @@ export function MatchingExercise({ definitions, onUpdateInput, terms }: Props) {
 
 function AvailableTerms({ onDropToAvailable, terms, usedTermIndices }: AvailableTermsProps) {
     const [isDragOver, setIsDragOver] = useState(false);
-    const availableTerms = terms.filter((term) => !usedTermIndices.includes(term.index));
+    const availableTerms = terms
+        .filter((term) => !usedTermIndices.includes(term.index))
+        .sort((a, b) => a.text.localeCompare(b.text));
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
@@ -228,7 +226,7 @@ function DropZone({ definitionIndex, definitionText, matchedTerm, onDrop }: Drop
 
     return (
         <div
-            className={`flex items-center gap-4 rounded-lg p-4 transition-all duration-200 ${
+            className={`flex items-center gap-4 rounded-lg py-0.5 transition-all duration-200 ${
                 isDragOver ? 'bg-gray-100' : ''
             }`}
             onDragLeave={handleDragLeave}

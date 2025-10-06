@@ -42,6 +42,7 @@ function observePageChanges() {
 
     observer.observe(document.body, { childList: true, subtree: true });
 }
+
 function setupMatchingExercise(table: HTMLTableElement) {
     if (table.classList.contains('viceroy-processed')) return;
     table.classList.add('viceroy-processed');
@@ -53,7 +54,7 @@ function setupMatchingExercise(table: HTMLTableElement) {
     const rows = table.querySelectorAll('tr');
     if (!rows.length) return;
 
-    rows.forEach((row) => {
+    for (const row of rows) {
         const term = row.querySelector<HTMLElement>('matching_answer');
         const definition = row.querySelector<HTMLElement>('.matching_question');
         const input = row.querySelector<HTMLInputElement>('input[name^="ans_"]:not([type="hidden"])');
@@ -75,7 +76,9 @@ function setupMatchingExercise(table: HTMLTableElement) {
 
             inputElements.push(input);
         }
-    });
+    }
+
+    if (!terms.length || !definitions.length || !inputElements.length) return;
 
     // Callback to update inputs
     const updateInput = (definitionIndex: number, termIndex: null | number) => {
