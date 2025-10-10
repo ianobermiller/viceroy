@@ -78,8 +78,8 @@ async function release() {
         await runCommand(`git commit -m "${commitMessage}"`, 'commit changes');
         console.log(`✅ Committed: "${commitMessage}"`);
 
-        // Git tag
-        await runCommand(`git tag v${newVersion}`, 'create tag');
+        // Git tag (annotated so --follow-tags will push it)
+        await runCommand(`git tag -a v${newVersion} -m "Release v${newVersion}"`, 'create tag');
         console.log(`✅ Created tag: v${newVersion}`);
 
         // Git push with tags
