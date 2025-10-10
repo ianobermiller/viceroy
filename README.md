@@ -95,6 +95,24 @@ src/
 - [Insect icons](https://www.flaticon.com/free-icons/insect) created by
   Freepik - Flaticon
 
+## Publishing
+
+This extension uses automated publishing via GitHub Actions. See
+[PUBLISHING.md](PUBLISHING.md) for detailed setup instructions.
+
+Quick release process:
+
+```bash
+# Release a new version (bumps, commits, tags, and pushes automatically)
+npm run release:patch
+```
+
+The GitHub Actions workflow will automatically:
+
+- Run linting and type checking
+- Build the extension
+- Publish to the Chrome Web Store (only if all checks pass)
+
 ## License
 
 MIT
