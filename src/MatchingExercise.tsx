@@ -13,10 +13,11 @@ export interface Term {
     text: string;
 }
 
-interface AvailableTermsProps {
-    onDropToAvailable: (termIndex: number) => void;
-    terms: Term[];
-    usedTermIndices: number[];
+interface AvailableItemsProps {
+    items: Definition[] | Term[];
+    label: string;
+    onDropToAvailable: (itemIndex: number) => void;
+    usedItemIndices: number[];
 }
 
 interface DraggableItemProps {
@@ -25,10 +26,9 @@ interface DraggableItemProps {
 }
 
 interface DropZoneProps {
-    definitionIndex: number;
-    definitionText: string;
-    matchedTerm: null | Term;
-    onDrop: (definitionIndex: number, termIndex: number) => void;
+    fixedText: string;
+    matchedItem: { index: number; text: string } | null;
+    onDrop: (droppedItemIndex: number) => void;
 }
 
 interface Props {
@@ -48,6 +48,9 @@ export function MatchingExercise({ definitions, onUpdateInput, terms }: Props) {
             return mapping;
         }, {});
     });
+
+    // State to track whether terms and definitions are swapped in the display
+    const [swapped, setSwapped] = useState(false);
 
     const handleDrop = (definitionIndex: number, termIndex: number) => {
         // Update via callback
@@ -98,42 +101,109 @@ export function MatchingExercise({ definitions, onUpdateInput, terms }: Props) {
         }
     };
 
+    // Get used definition indices (definitions that have been matched to terms)
+    const usedDefinitionIndices = Object.keys(definitionToTermMapping)
+        .map((k) => parseInt(k, 10))
+        .filter((defIdx) => definitionToTermMapping[defIdx] !== null);
+
     return (
         <div className='space-y-6'>
-            {/* Available Terms */}
-            <AvailableTerms
-                onDropToAvailable={handleDropToAvailable}
-                terms={terms}
-                usedTermIndices={Object.values(definitionToTermMapping).filter((idx): idx is number => idx !== null)}
-            />
+            {/* Swap Button */}
+            <div className='flex justify-end'>
+                <button
+                    className='rounded bg-gray-200 px-3 py-1 text-sm text-gray-700 transition-colors hover:bg-gray-300'
+                    onClick={() => setSwapped(!swapped)}
+                    type='button'
+                >
+                    ⇄ Swap Terms ↔ Definitions
+                </button>
+            </div>
 
-            {/* Definitions with Drop Zones */}
-            <section>
-                <h4 className='mb-3 text-sm text-gray-700'>Definitions</h4>
-                {definitions.map((definition) => {
-                    const matchedTermIndex = definitionToTermMapping[definition.index];
-                    const matchedTerm =
-                        matchedTermIndex !== undefined ? terms.find((t) => t.index === matchedTermIndex) || null : null;
+            {swapped ? (
+                // Swapped mode: definitions are draggable, terms are fixed
+                <>
+                    {/* Available Definitions */}
+                    <AvailableItems
+                        items={definitions}
+                        label='Available Definitions'
+                        onDropToAvailable={(definitionIndex) => {
+                            // Find which term this definition was matched to and clear it
+                            if (definitionToTermMapping[definitionIndex] !== undefined) {
+                                handleRemoveTerm(definitionIndex);
+                            }
+                        }}
+                        usedItemIndices={usedDefinitionIndices}
+                    />
 
-                    return (
-                        <DropZone
-                            definitionIndex={definition.index}
-                            definitionText={definition.text}
-                            key={definition.index}
-                            matchedTerm={matchedTerm}
-                            onDrop={handleDrop}
-                        />
-                    );
-                })}
-            </section>
+                    {/* Terms with Drop Zones for Definitions */}
+                    <section>
+                        <h4 className='mb-3 text-sm text-gray-700'>Terms</h4>
+                        {terms.map((term) => {
+                            // Find which definition is matched to this term
+                            const matchedDefinitionIndex = Object.entries(definitionToTermMapping).find(
+                                ([, termIdx]) => termIdx === term.index,
+                            )?.[0];
+                            const matchedDefinition = matchedDefinitionIndex
+                                ? definitions.find((d) => d.index === parseInt(matchedDefinitionIndex, 10)) || null
+                                : null;
+
+                            return (
+                                <DropZone
+                                    fixedText={term.text}
+                                    key={term.index}
+                                    matchedItem={matchedDefinition}
+                                    onDrop={(definitionIndex) => {
+                                        // When dropping a definition onto a term, map that term to that definition
+                                        handleDrop(definitionIndex, term.index);
+                                    }}
+                                />
+                            );
+                        })}
+                    </section>
+                </>
+            ) : (
+                // Normal mode: terms are draggable, definitions are fixed
+                <>
+                    {/* Available Terms */}
+                    <AvailableItems
+                        items={terms}
+                        label='Available Terms'
+                        onDropToAvailable={handleDropToAvailable}
+                        usedItemIndices={Object.values(definitionToTermMapping).filter(
+                            (idx): idx is number => idx !== null,
+                        )}
+                    />
+
+                    {/* Definitions with Drop Zones for Terms */}
+                    <section>
+                        <h4 className='mb-3 text-sm text-gray-700'>Definitions</h4>
+                        {definitions.map((definition) => {
+                            const matchedTermIndex = definitionToTermMapping[definition.index];
+                            const matchedTerm =
+                                matchedTermIndex !== undefined
+                                    ? terms.find((t) => t.index === matchedTermIndex) || null
+                                    : null;
+
+                            return (
+                                <DropZone
+                                    fixedText={definition.text}
+                                    key={definition.index}
+                                    matchedItem={matchedTerm}
+                                    onDrop={(termIndex) => handleDrop(definition.index, termIndex)}
+                                />
+                            );
+                        })}
+                    </section>
+                </>
+            )}
         </div>
     );
 }
 
-function AvailableTerms({ onDropToAvailable, terms, usedTermIndices }: AvailableTermsProps) {
+function AvailableItems({ items, label, onDropToAvailable, usedItemIndices }: AvailableItemsProps) {
     const [isDragOver, setIsDragOver] = useState(false);
-    const availableTerms = terms
-        .filter((term) => !usedTermIndices.includes(term.index))
+    const availableItems = items
+        .filter((item) => !usedItemIndices.includes(item.index))
         .sort((a, b) => a.text.localeCompare(b.text));
 
     const handleDragOver = (e: React.DragEvent) => {
@@ -149,9 +219,9 @@ function AvailableTerms({ onDropToAvailable, terms, usedTermIndices }: Available
         e.preventDefault();
         setIsDragOver(false);
 
-        const termIndex = parseInt(e.dataTransfer.getData('text/plain'));
-        if (!isNaN(termIndex) && usedTermIndices.includes(termIndex)) {
-            onDropToAvailable(termIndex);
+        const itemIndex = parseInt(e.dataTransfer.getData('text/plain'));
+        if (!isNaN(itemIndex) && usedItemIndices.includes(itemIndex)) {
+            onDropToAvailable(itemIndex);
         }
     };
 
@@ -162,14 +232,14 @@ function AvailableTerms({ onDropToAvailable, terms, usedTermIndices }: Available
             onDragOver={handleDragOver}
             onDrop={handleDrop}
         >
-            <h4 className='mb-3 text-sm text-gray-700'>Available Terms</h4>
+            <h4 className='mb-3 text-sm text-gray-700'>{label}</h4>
             <div className='flex flex-wrap gap-2'>
-                {availableTerms.map((term) => (
-                    <DraggableItem key={term.index} termIndex={term.index} text={term.text} />
+                {availableItems.map((item) => (
+                    <DraggableItem key={item.index} termIndex={item.index} text={item.text} />
                 ))}
-                {availableTerms.length === 0 && (
+                {availableItems.length === 0 && (
                     <p className='text-gray-500 italic'>
-                        {isDragOver ? 'Drop here to return term' : 'All terms have been used'}
+                        {isDragOver ? 'Drop here to return' : 'All items have been used'}
                     </p>
                 )}
             </div>
@@ -202,7 +272,7 @@ function DraggableItem({ termIndex, text }: DraggableItemProps) {
     );
 }
 
-function DropZone({ definitionIndex, definitionText, matchedTerm, onDrop }: DropZoneProps) {
+function DropZone({ fixedText, matchedItem, onDrop }: DropZoneProps) {
     const [isDragOver, setIsDragOver] = useState(false);
 
     const handleDragOver = (e: React.DragEvent) => {
@@ -218,9 +288,9 @@ function DropZone({ definitionIndex, definitionText, matchedTerm, onDrop }: Drop
         e.preventDefault();
         setIsDragOver(false);
 
-        const termIndex = parseInt(e.dataTransfer.getData('text/plain'));
-        if (!isNaN(termIndex)) {
-            onDrop(definitionIndex, termIndex);
+        const droppedItemIndex = parseInt(e.dataTransfer.getData('text/plain'));
+        if (!isNaN(droppedItemIndex)) {
+            onDrop(droppedItemIndex);
         }
     };
 
@@ -233,10 +303,10 @@ function DropZone({ definitionIndex, definitionText, matchedTerm, onDrop }: Drop
             onDragOver={handleDragOver}
             onDrop={handleDrop}
         >
-            {/* Term on the left with fixed width */}
+            {/* Draggable item on the left with fixed width */}
             <div className='flex-shrink-0' style={{ width: TERM_WIDTH }}>
-                {matchedTerm ? (
-                    <DraggableItem termIndex={matchedTerm.index} text={matchedTerm.text} />
+                {matchedItem ? (
+                    <DraggableItem termIndex={matchedItem.index} text={matchedItem.text} />
                 ) : (
                     <div
                         className='rounded border-2 border-dashed border-gray-300 text-gray-400'
@@ -245,8 +315,8 @@ function DropZone({ definitionIndex, definitionText, matchedTerm, onDrop }: Drop
                 )}
             </div>
 
-            {/* Definition text on the right */}
-            <span className='flex-1 text-gray-700'>{definitionText}</span>
+            {/* Fixed text on the right */}
+            <span className='flex-1 text-gray-700'>{fixedText}</span>
         </div>
     );
 }
