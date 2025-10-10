@@ -91,10 +91,38 @@ function setupMatchingExercise(table: HTMLTableElement) {
 
     const reactContainer = document.createElement('div');
     reactContainer.className = 'viceroy';
-    table.parentElement?.insertBefore(reactContainer, table.nextSibling);
+    table.parentElement?.insertBefore(reactContainer, table);
 
     const root = createRoot(reactContainer);
     root.render(React.createElement(MatchingExercise, { definitions, onUpdateInput: updateInput, terms }));
+
+    // Create toggle link for original table
+    const toggleContainer = document.createElement('div');
+    toggleContainer.className = 'viceroy-toggle';
+    toggleContainer.style.marginTop = '1rem';
+    toggleContainer.style.marginBottom = '1rem';
+
+    const toggleLink = document.createElement('a');
+    toggleLink.href = '#';
+    toggleLink.textContent = 'Show original table';
+    toggleLink.style.color = '#3b82f6';
+    toggleLink.style.textDecoration = 'underline';
+    toggleLink.style.cursor = 'pointer';
+    toggleLink.style.fontSize = '0.875rem';
+
+    toggleLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (table.style.display === 'none') {
+            table.style.display = '';
+            toggleLink.textContent = 'Hide original table';
+        } else {
+            table.style.display = 'none';
+            toggleLink.textContent = 'Show original table';
+        }
+    });
+
+    toggleContainer.appendChild(toggleLink);
+    table.parentElement?.insertBefore(toggleContainer, table);
 
     table.style.display = 'none';
 }
