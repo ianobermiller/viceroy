@@ -8,8 +8,6 @@ import storybook from 'eslint-plugin-storybook';
 import { defineConfig } from 'eslint/config';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
-import tsconfigNode from './tsconfig.node.json' with { type: 'json' };
-import tsconfigWeb from './tsconfig.web.json' with { type: 'json' };
 
 export default defineConfig(
     { ignores: ['**/node_modules', '**/dist', '**/out'] },
@@ -19,12 +17,12 @@ export default defineConfig(
     perfectionist.configs['recommended-alphabetical'],
     storybook.configs['flat/recommended'],
     {
-        files: tsconfigNode.include,
-        languageOptions: { globals: globals.node, parserOptions: { project: ['./tsconfig.node.json'] } },
+        files: ['vite.config.ts', 'scripts/**/*', 'eslint.config.mjs'],
+        languageOptions: { globals: globals.node, parserOptions: { project: ['./tsconfig.json'] } },
     },
     {
-        files: tsconfigWeb.include,
-        languageOptions: { globals: globals.browser, parserOptions: { project: ['./tsconfig.web.json'] } },
+        files: ['src/**/*'],
+        languageOptions: { globals: globals.browser, parserOptions: { project: ['./src/tsconfig.json'] } },
     },
     react.configs.flat.recommended,
     react.configs.flat['jsx-runtime'],
@@ -75,4 +73,6 @@ export default defineConfig(
         languageOptions: { sourceType: 'commonjs' },
         rules: { '@typescript-eslint/no-require-imports': 'off' },
     },
+    // Allow console.log in scripts and background files
+    { files: ['scripts/**/*', 'src/background.ts'], rules: { 'no-console': 'off' } },
 );

@@ -18,7 +18,7 @@ interface AvailableItemsProps {
     label: string;
     onDropToAvailable: (itemIndex: number) => void;
     onSelectItem: (itemIndex: number) => void;
-    selectedItemIndex: number | null;
+    selectedItemIndex: null | number;
     usedItemIndices: number[];
 }
 
@@ -36,7 +36,7 @@ interface DropZoneProps {
     onClick: () => void;
     onDrop: (droppedItemIndex: number) => void;
     onRemoveItem: () => void;
-    selectedItemIndex: number | null;
+    selectedItemIndex: null | number;
 }
 
 interface Props {
@@ -61,7 +61,7 @@ export function MatchingExercise({ definitions, onUpdateInput, terms }: Props) {
     const [swapped, setSwapped] = useState(false);
 
     // State to track the currently selected item for click-to-match interaction
-    const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null);
+    const [selectedItemIndex, setSelectedItemIndex] = useState<null | number>(null);
 
     const handleSelectItem = (itemIndex: number) => {
         // Toggle selection: if the item is already selected, deselect it

@@ -1,18 +1,18 @@
 // Listen for messages from content scripts
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message: { type: string }, sender, sendResponse) => {
     console.log('Message received in background:', message, 'from', sender.tab?.id);
 
     if (message.type === 'init') {
         const tabId = sender.tab?.id;
         if (tabId) {
-            chrome.scripting.executeScript({
-                target: { tabId, allFrames: true },
+            void chrome.scripting.executeScript({
                 func: () => {
-                    window.alert = function (message) {
+                    window.alert = function (message: string) {
                         const event = new CustomEvent('alert', { detail: message });
                         window.dispatchEvent(event);
                     };
                 },
+                target: { allFrames: true, tabId },
                 world: 'MAIN',
             });
         }

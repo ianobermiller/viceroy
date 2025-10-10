@@ -3,26 +3,14 @@
 import { exec } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 
 const execAsync = promisify(exec);
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 const args = process.argv.slice(2);
 const versionType = args[0] || 'patch'; // major, minor, or patch
-
-async function runCommand(command, description) {
-    try {
-        const { stdout, stderr } = await execAsync(command);
-        if (stderr && !stderr.includes('warning')) {
-            console.error(`⚠️  ${description}:`, stderr);
-        }
-        return stdout.trim();
-    } catch (error) {
-        throw new Error(`Failed to ${description}: ${error.message}`);
-    }
-}
 
 async function checkGitStatus() {
     try {
@@ -33,7 +21,7 @@ async function checkGitStatus() {
             console.error(status);
             process.exit(1);
         }
-    } catch (error) {
+    } catch {
         console.error('❌ Not a git repository or git is not installed');
         process.exit(1);
     }
@@ -110,6 +98,18 @@ async function release() {
     } catch (error) {
         console.error('❌ Error:', error.message);
         process.exit(1);
+    }
+}
+
+async function runCommand(command, description) {
+    try {
+        const { stderr, stdout } = await execAsync(command);
+        if (stderr && !stderr.includes('warning')) {
+            console.error(`⚠️  ${description}:`, stderr);
+        }
+        return stdout.trim();
+    } catch (error) {
+        throw new Error(`Failed to ${description}: ${error.message}`);
     }
 }
 

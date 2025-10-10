@@ -10,19 +10,19 @@ if (document.readyState === 'loading') {
     init();
 }
 
+// Inject a script into the page that will override window.alert to bubble up as an event instead that can be listened
+// to by the content script.
+function alertAsEvent() {
+    window.addEventListener('alert', (event) => {
+        console.error('got an alert in content script', event);
+    });
+}
+
 function init() {
-    chrome.runtime.sendMessage({ type: 'init' });
+    void chrome.runtime.sendMessage({ type: 'init' });
 
     matchingLesson();
     gradingPage();
     gradingButtons();
     alertAsEvent();
-}
-
-// Inject a script into the page that will override window.alert to bubble up as an event instead that can be listened
-// to by the content script.
-function alertAsEvent() {
-    window.addEventListener('alert', (event) => {
-        console.log('got an alert in content script', event);
-    });
 }

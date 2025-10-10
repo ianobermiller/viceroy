@@ -1,5 +1,5 @@
 {
     "extends": "./tsconfig.base.json",
     "compilerOptions": { "composite": true, "allowSyntheticDefaultImports": true, "types": ["node"] },
-    "include": ["vite.config.ts"]
+    "include": ["vite.config.ts", "scripts/**/*", "eslint.config.mjs"]
 }
