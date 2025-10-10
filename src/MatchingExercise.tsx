@@ -17,18 +17,26 @@ interface AvailableItemsProps {
     items: Definition[] | Term[];
     label: string;
     onDropToAvailable: (itemIndex: number) => void;
+    onSelectItem: (itemIndex: number) => void;
+    selectedItemIndex: number | null;
     usedItemIndices: number[];
 }
 
 interface DraggableItemProps {
+    isSelected: boolean;
+    onClick: (e?: React.MouseEvent<HTMLDivElement>) => void;
     termIndex: number;
     text: string;
 }
 
 interface DropZoneProps {
     fixedText: string;
+    isClickable: boolean;
     matchedItem: { index: number; text: string } | null;
+    onClick: () => void;
     onDrop: (droppedItemIndex: number) => void;
+    onRemoveItem: () => void;
+    selectedItemIndex: number | null;
 }
 
 interface Props {
@@ -52,6 +60,14 @@ export function MatchingExercise({ definitions, onUpdateInput, terms }: Props) {
     // State to track whether terms and definitions are swapped in the display
     const [swapped, setSwapped] = useState(false);
 
+    // State to track the currently selected item for click-to-match interaction
+    const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null);
+
+    const handleSelectItem = (itemIndex: number) => {
+        // Toggle selection: if the item is already selected, deselect it
+        setSelectedItemIndex((prev) => (prev === itemIndex ? null : itemIndex));
+    };
+
     const handleDrop = (definitionIndex: number, termIndex: number) => {
         // Update via callback
         onUpdateInput(definitionIndex, termIndex);
@@ -74,6 +90,9 @@ export function MatchingExercise({ definitions, onUpdateInput, terms }: Props) {
             newMapping[definitionIndex] = termIndex;
             return newMapping;
         });
+
+        // Clear selection after successful match
+        setSelectedItemIndex(null);
     };
 
     const handleRemoveTerm = (definitionIndex: number) => {
@@ -132,6 +151,8 @@ export function MatchingExercise({ definitions, onUpdateInput, terms }: Props) {
                                 handleRemoveTerm(definitionIndex);
                             }
                         }}
+                        onSelectItem={handleSelectItem}
+                        selectedItemIndex={selectedItemIndex}
                         usedItemIndices={usedDefinitionIndices}
                     />
 
@@ -150,12 +171,24 @@ export function MatchingExercise({ definitions, onUpdateInput, terms }: Props) {
                             return (
                                 <DropZone
                                     fixedText={term.text}
+                                    isClickable={selectedItemIndex !== null}
                                     key={term.index}
                                     matchedItem={matchedDefinition}
+                                    onClick={() => {
+                                        if (selectedItemIndex !== null) {
+                                            handleDrop(selectedItemIndex, term.index);
+                                        }
+                                    }}
                                     onDrop={(definitionIndex) => {
                                         // When dropping a definition onto a term, map that term to that definition
                                         handleDrop(definitionIndex, term.index);
                                     }}
+                                    onRemoveItem={() => {
+                                        if (matchedDefinitionIndex) {
+                                            handleRemoveTerm(parseInt(matchedDefinitionIndex, 10));
+                                        }
+                                    }}
+                                    selectedItemIndex={selectedItemIndex}
                                 />
                             );
                         })}
@@ -169,6 +202,8 @@ export function MatchingExercise({ definitions, onUpdateInput, terms }: Props) {
                         items={terms}
                         label='Available Terms'
                         onDropToAvailable={handleDropToAvailable}
+                        onSelectItem={handleSelectItem}
+                        selectedItemIndex={selectedItemIndex}
                         usedItemIndices={Object.values(definitionToTermMapping).filter(
                             (idx): idx is number => idx !== null,
                         )}
@@ -187,9 +222,17 @@ export function MatchingExercise({ definitions, onUpdateInput, terms }: Props) {
                             return (
                                 <DropZone
                                     fixedText={definition.text}
+                                    isClickable={selectedItemIndex !== null}
                                     key={definition.index}
                                     matchedItem={matchedTerm}
+                                    onClick={() => {
+                                        if (selectedItemIndex !== null) {
+                                            handleDrop(definition.index, selectedItemIndex);
+                                        }
+                                    }}
                                     onDrop={(termIndex) => handleDrop(definition.index, termIndex)}
+                                    onRemoveItem={() => handleRemoveTerm(definition.index)}
+                                    selectedItemIndex={selectedItemIndex}
                                 />
                             );
                         })}
@@ -200,7 +243,14 @@ export function MatchingExercise({ definitions, onUpdateInput, terms }: Props) {
     );
 }
 
-function AvailableItems({ items, label, onDropToAvailable, usedItemIndices }: AvailableItemsProps) {
+function AvailableItems({
+    items,
+    label,
+    onDropToAvailable,
+    onSelectItem,
+    selectedItemIndex,
+    usedItemIndices,
+}: AvailableItemsProps) {
     const [isDragOver, setIsDragOver] = useState(false);
     const availableItems = items
         .filter((item) => !usedItemIndices.includes(item.index))
@@ -235,7 +285,13 @@ function AvailableItems({ items, label, onDropToAvailable, usedItemIndices }: Av
             <h4 className='mb-3 text-sm text-gray-700'>{label}</h4>
             <div className='flex flex-wrap gap-2'>
                 {availableItems.map((item) => (
-                    <DraggableItem key={item.index} termIndex={item.index} text={item.text} />
+                    <DraggableItem
+                        isSelected={selectedItemIndex === item.index}
+                        key={item.index}
+                        onClick={() => onSelectItem(item.index)}
+                        termIndex={item.index}
+                        text={item.text}
+                    />
                 ))}
                 {availableItems.length === 0 && (
                     <p className='text-gray-500 italic'>
@@ -247,7 +303,7 @@ function AvailableItems({ items, label, onDropToAvailable, usedItemIndices }: Av
     );
 }
 
-function DraggableItem({ termIndex, text }: DraggableItemProps) {
+function DraggableItem({ isSelected, onClick, termIndex, text }: DraggableItemProps) {
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
         e.dataTransfer.setData('text/plain', termIndex.toString());
         const target = e.currentTarget;
@@ -261,8 +317,13 @@ function DraggableItem({ termIndex, text }: DraggableItemProps) {
 
     return (
         <div
-            className='cursor-grab rounded bg-gradient-to-br from-blue-100 to-purple-200 text-center text-black shadow-sm transition-all duration-200 select-none hover:scale-105 hover:shadow-md active:scale-95 active:cursor-grabbing'
+            className={`cursor-pointer rounded px-1 text-center text-black shadow-sm transition-all duration-200 select-none hover:scale-105 hover:shadow-md active:scale-95 ${
+                isSelected
+                    ? 'bg-gradient-to-br from-yellow-200 to-yellow-300 ring-2 ring-yellow-400'
+                    : 'bg-gradient-to-br from-blue-100 to-purple-200'
+            }`}
             draggable
+            onClick={onClick}
             onDragEnd={handleDragEnd}
             onDragStart={handleDragStart}
             style={{ lineHeight: `${TERM_HEIGHT}px`, width: TERM_WIDTH }}
@@ -272,7 +333,15 @@ function DraggableItem({ termIndex, text }: DraggableItemProps) {
     );
 }
 
-function DropZone({ fixedText, matchedItem, onDrop }: DropZoneProps) {
+function DropZone({
+    fixedText,
+    isClickable,
+    matchedItem,
+    onClick,
+    onDrop,
+    onRemoveItem,
+    selectedItemIndex,
+}: DropZoneProps) {
     const [isDragOver, setIsDragOver] = useState(false);
 
     const handleDragOver = (e: React.DragEvent) => {
@@ -294,11 +363,18 @@ function DropZone({ fixedText, matchedItem, onDrop }: DropZoneProps) {
         }
     };
 
+    const handleClick = () => {
+        if (isClickable) {
+            onClick();
+        }
+    };
+
     return (
         <div
             className={`flex items-center gap-4 rounded-lg py-0.5 transition-all duration-200 ${
                 isDragOver ? 'bg-gray-100' : ''
-            }`}
+            } ${isClickable ? 'cursor-pointer hover:bg-blue-50' : ''}`}
+            onClick={handleClick}
             onDragLeave={handleDragLeave}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
@@ -306,10 +382,20 @@ function DropZone({ fixedText, matchedItem, onDrop }: DropZoneProps) {
             {/* Draggable item on the left with fixed width */}
             <div className='flex-shrink-0' style={{ width: TERM_WIDTH }}>
                 {matchedItem ? (
-                    <DraggableItem termIndex={matchedItem.index} text={matchedItem.text} />
+                    <DraggableItem
+                        isSelected={selectedItemIndex === matchedItem.index}
+                        onClick={(e) => {
+                            e?.stopPropagation();
+                            onRemoveItem();
+                        }}
+                        termIndex={matchedItem.index}
+                        text={matchedItem.text}
+                    />
                 ) : (
                     <div
-                        className='rounded border-2 border-dashed border-gray-300 text-gray-400'
+                        className={`rounded border-2 border-dashed text-gray-400 ${
+                            isClickable ? 'border-blue-400 bg-blue-50' : 'border-gray-300'
+                        }`}
                         style={{ height: TERM_HEIGHT, width: TERM_WIDTH }}
                     />
                 )}
